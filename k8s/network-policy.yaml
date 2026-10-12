@@ -1,0 +1,63 @@
+# --- KUBERNETES NETWORK POLICY ---
+# Controls pod-to-pod TRAFFIC at the CNI level. Enforced by the cluster's CNI
+# plugin (Calico, Cilium, the AWS VPC CNI with policy support, etc.) - plain
+# kubectl apply does nothing on a cluster whose CNI doesn't enforce policies,
+# so this is worth mentioning if asked "does this actually work everywhere?".
+#
+# Default Kubernetes behavior: ALL pods can talk to ALL other pods. This
+# file flips that to default-deny, then explicitly allows only the traffic
+# that should exist.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: cloud-security-lab
+spec:
+  podSelector: {} # applies to every pod in the namespace
+  policyTypes:
+    - Ingress
+    - Egress
+  # No ingress/egress rules defined below this = deny by default
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-app-ingress-from-ingress-controller
+  namespace: cloud-security-lab
+spec:
+  podSelector:
+    matchLabels:
+      app: cloud-security-lab-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-app-egress-to-dns-only
+  namespace: cloud-security-lab
+spec:
+  podSelector:
+    matchLabels:
+      app: cloud-security-lab-app
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+  # Extend this with an explicit rule if the app needs to reach a database
+  # pod or an external service - the point is nothing is open by default.

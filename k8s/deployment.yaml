@@ -1,0 +1,75 @@
+# --- LAYER 2: KUBERNETES (workload scheduling) ---
+# This runs the Docker image built above, at scale, with restart/self-healing.
+# Security-relevant fields are commented so you can explain each one.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-security-lab-app
+  namespace: cloud-security-lab
+  labels:
+    app: cloud-security-lab-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloud-security-lab-app
+  template:
+    metadata:
+      labels:
+        app: cloud-security-lab-app
+    spec:
+      # Ties this pod to the least-privilege service account defined in rbac.yaml
+      serviceAccountName: cloud-security-lab-sa
+
+      # Pod-level security context: belt-and-suspenders on top of the
+      # Dockerfile's USER directive.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: app
+          image: cloud-security-lab-app:latest # replace with your registry/tag
+          ports:
+            - containerPort: 8080
+
+          # Container-level hardening
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+
+          # Pull secrets from a Kubernetes Secret, never bake them into the
+          # image or the manifest itself.
+          envFrom:
+            - secretRef:
+                name: cloud-security-lab-secrets
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-security-lab-app
+  namespace: cloud-security-lab
+spec:
+  selector:
+    app: cloud-security-lab-app
+  ports:
+    - port: 80
+      targetPort: 8080

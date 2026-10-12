@@ -1,0 +1,38 @@
+# --- KUBERNETES RBAC ---
+# Controls WHO/WHAT can call the Kubernetes API, and what they can do.
+# This is completely separate from network policy below - RBAC governs the
+# control plane, not pod-to-pod network traffic.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloud-security-lab-sa
+  namespace: cloud-security-lab
+---
+# A Role is namespace-scoped (use ClusterRole for cluster-wide permissions).
+# This role intentionally grants almost nothing: the app itself doesn't need
+# to talk to the Kubernetes API to do its job, so it gets read-only access
+# to its own ConfigMaps and nothing else - the least-privilege default.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cloud-security-lab-readonly
+  namespace: cloud-security-lab
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cloud-security-lab-readonly-binding
+  namespace: cloud-security-lab
+subjects:
+  - kind: ServiceAccount
+    name: cloud-security-lab-sa
+    namespace: cloud-security-lab
+roleRef:
+  kind: Role
+  name: cloud-security-lab-readonly
+  apiGroup: rbac.authorization.k8s.io

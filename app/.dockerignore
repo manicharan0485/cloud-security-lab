@@ -1,0 +1,6 @@
+# Don't leak local junk, secrets, or VCS history into the build context/image
+.git
+.env
+*.pem
+*.key
+__pycache__
