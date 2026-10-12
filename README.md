@@ -95,4 +95,6 @@ cd terraform && terraform init -backend=false && terraform validate
 # Validate Kubernetes manifest syntax
 kubectl apply --dry-run=client -f k8s/
 
+---
 
+**Manicharan Ravi** · [Portfolio](https://manicharan0485.github.io) · [LinkedIn](https://linkedin.com/in/manicharan-ravi)
