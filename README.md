@@ -2,7 +2,7 @@
 
 **A reference implementation of security-hardened cloud infrastructure — Terraform → Kubernetes → Docker — with every security decision documented inline.**
 
-Built by [Manicharan Ravi](https://github.com/manicharan0485) · Cloud Security Engineer · AWS · Kubernetes · Terraform
+Built by [Manicharan Ravi](https://github.com/manicharan0485) · IT Specialist & Cloud Engineer · AWS · Kubernetes · Terraform
 
 [![Terraform](https://img.shields.io/badge/Terraform-AWS-844FBA?logo=terraform&logoColor=white)](terraform/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-EKS-326CE5?logo=kubernetes&logoColor=white)](k8s/)
